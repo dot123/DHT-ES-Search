@@ -4,7 +4,7 @@
 	},
 	
 	"database":{
-		"host":"(127.0.0.1:3306)",
+		"host":"tcp(localhost:3306)",
 		"name":"dhtbt",
 		"user":"root",
 		"password":"your_password"
