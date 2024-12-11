@@ -1,0 +1,129 @@
+{{define "content"}}
+
+    <!-- 修改分页样式 -->
+    <style>
+        .pagination {
+            margin: 20px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-items: center;
+        }
+        .pagination a {
+            color: black;
+            padding: 5px 10px;
+            text-decoration: none;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        .pagination a:hover:not(.active):not(.disabled) {
+            background-color: #ddd;
+        }
+        .pagination a.disabled {
+            color: #ddd;
+            pointer-events: none;
+        }
+        .pagination span {
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+    </style>
+
+    <form action="/search/" class="form">
+        <input type="text" name="q" value="{{.Query}}" style="min-width:40%" /> <br />
+        Sort by 
+        <input type="radio" name="order" value="cnt"{{if eq .Order "cnt"}} checked="checked" {{end}} /> popularity
+        or 
+        <input type="radio" name="order" value="updated"{{if eq .Order "updated"}} checked="checked" {{end}} /> updates
+        <input type="submit" name="submit" />
+    </form>
+    <hr />
+    <div>
+        <h4>Founded {{len .Founded}} torrents out of {{.TotalCount}}.</h4>
+
+        {{range .Founded}}
+            <div class="row">
+                <div class="col-xs-2 col-md-1">{{.Length}}</div>
+                <div class="col-xs-10 col-md-11">
+                    {{if .HaveFiles}}
+                        <a href="/details/?id={{.Id}}">{{.Name}}</a>
+                    {{else}}
+                        {{.Name}}
+                    {{end}}
+                    <a href="https://www.google.ru/search?q={{urlquery .Name}}" target="_blank"><span class="glyphicon glyphicon-search"></span></a>
+                    <a href="magnet:?xt=urn:btih:{{.InfoHash}}&dn={{.Name}}"><span class="glyphicon glyphicon-magnet"></span></a>
+                </div>
+            </div>
+        {{end}}
+
+    </div>
+
+    <!-- 分页部分 -->
+    <div class="pagination">
+        {{if gt .Page 1}}
+            <a href="/search/?q={{urlquery .Query}}&order={{.Order}}&page={{sub .Page 1}}&sort={{urlquery .PrevSort}}">Previous</a>
+        {{else}}
+            <a class="disabled">Previous</a>
+        {{end}}
+
+        <!-- 显示当前页码/总页码 -->
+        <span>{{.Page}} / {{.TotalPages}}</span>
+
+        {{if lt .Page .TotalPages}}
+            <a href="/search/?q={{urlquery .Query}}&order={{.Order}}&page={{add .Page 1}}&sort={{urlquery .NextSort}}" onclick="saveSortValue({{.Page}}, '{{.NextSort}}')">Next</a>
+        {{else}}
+            <a class="disabled">Next</a>
+        {{end}}
+    </div>
+
+    <script>
+        // 使用 localStorage 存储每个页码的 sort 值
+        function saveSortValue(page, sortValue) {
+            const searchParams = new URLSearchParams(window.location.search);
+            const query = searchParams.get('q');
+            const order = searchParams.get('order');
+            const storageKey = `search_${query}_${order}_page_${page}`;
+            localStorage.setItem(storageKey, sortValue);
+            console.log(`Saving sort value for page ${page}:`, sortValue);
+        }
+
+        // 获取指定页码的 sort 值
+        function getSortValue(page) {
+            const searchParams = new URLSearchParams(window.location.search);
+            const query = searchParams.get('q');
+            const order = searchParams.get('order');
+            const storageKey = `search_${query}_${order}_page_${page}`;
+            const value = localStorage.getItem(storageKey);
+            console.log(`Getting sort value for page ${page}:`, value);
+            return value;
+        }
+
+        // 只在不是通过点击"上一页"到达时保存 sort 值
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentPage = {{.Page}};
+        const isFromPrevClick = urlParams.get('page') && parseInt(urlParams.get('page')) === currentPage && 
+                               document.referrer.includes(`page=${currentPage + 1}`);
+
+        if (!isFromPrevClick) {
+            const currentSort = '{{.NextSort}}';
+            if (currentSort) {
+                saveSortValue(currentPage, currentSort);
+            }
+        }
+
+        // 在页面加载时更新链接的 prevSort 参数
+        document.addEventListener('DOMContentLoaded', function() {
+            const links = document.querySelectorAll('.pagination a:not(.disabled)');
+            links.forEach(link => {
+                const url = new URL(link.href);
+                const targetPage = parseInt(url.searchParams.get('page'));
+                const prevSortValue = getSortValue(targetPage - 2);
+                if (prevSortValue) {
+                    url.searchParams.set('prevSort', prevSortValue);
+                    link.href = url.toString();
+                }
+            });
+        });
+    </script>
+
+{{end}}
