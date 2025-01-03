@@ -1,6 +1,6 @@
 # DHT 搜索引擎
 
-> 本项目基于 [mr-mmajoR/Bittorrent-DHT-Tracker](https://github.com/mr-mmajoR/Bittorrent-DHT-Tracker) 改造，主要改进了搜索功能，将原有的 MySQL 全文搜索替换为 Elasticsearch，并优化了分页实现。
+> 本项目基于 mr-mmajoR/Bittorrent-DHT-Tracker 进行改造，主要针对搜索功能进行了优化，旨在实现海量数据的毫秒级响应。我们将原有的 MySQL 全文搜索替换为 Elasticsearch，以提升搜索效率，并对分页实现进行了优化，显著提升了系统的响应速度和用户体验。
 
 ---
 
